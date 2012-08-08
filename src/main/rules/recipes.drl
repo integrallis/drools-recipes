@@ -1,0 +1,80 @@
+package org.integrallis.drools.recipes
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.TreeSet;
+import java.util.Iterator;
+
+/*
+rule "RecipeCanBeMade"
+    dialect "mvel" 
+	when
+		recipe : Recipe(howMany : numberOfIngredients)
+		matchedIngredients : ArrayList( size == howMany ) from collect ( Ingredient(eval(inRecipe(recipe))) ) 
+	then
+	    insert(new Match(recipe));
+end
+*/
+
+rule "RecipeCanBeMade"
+    dialect "mvel" 
+	when
+		recipe : Recipe(ingredients : ingredients, howMany : numberOfIngredients)
+		matchedIngredients : ArrayList( size == howMany ) from collect ( Ingredient(this memberOf ingredients) ) 
+		not Match(recipe == recipe)
+	then
+	    insert(new Match(recipe));
+end
+
+
+
+rule "DetermineAverageRecipeRatingForMatchedRecipes"
+    when
+        match : Match(matchedRecipe : recipe, fullMatch == true)
+        not AverageRecipeRating(recipe == matchedRecipe)
+        averageRating : Double()
+            from accumulate( 
+                RecipeRating( recipe == matchedRecipe, recipeRating : rating ),
+                average(recipeRating)
+            )
+    then
+        insert(new AverageRecipeRating(matchedRecipe, averageRating));
+end
+
+
+rule "RecipeCanBeMadeIfOnlyForNMissingIngredients"
+    dialect "mvel" 
+	when
+	    preferences : UserPreferences(minimumNoIngredients : minimumNumberOfIngredientsMissing)
+		recipe : Recipe(ingredients : ingredients)
+		matchedIngredients : ArrayList( eval(size >= recipe.numberOfIngredients - minimumNoIngredients) ) from collect ( Ingredient(this memberOf ingredients) ) 
+	then
+	    Match partial = new Match(recipe);
+	    partial.setMissingIngredients(recipe.getRemainingIngredients(matchedIngredients));
+	    insert(partial);
+end
+
+
+/* =======
+   Queries
+   ======= */
+
+query "getAllMatches"
+    match: Match()
+end
+
+query "getPartialMatches"
+    match: Match(fullMatch == false)
+end
+
+query "getFullMatches"
+    match: Match(fullMatch == true)
+end
+
+query "getAllAverageRecipeRatings"
+    rating: AverageRecipeRating()
+end
+
+query "getAverageRecipeRatingFor" (Recipe recipe)
+    rating: AverageRecipeRating(recipe == recipe)
+end
