@@ -1,20 +1,9 @@
 package org.integrallis.drools.recipes
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.Iterator;
-
-/*
-rule "RecipeCanBeMade"
-    dialect "mvel" 
-	when
-		recipe : Recipe(howMany : numberOfIngredients)
-		matchedIngredients : ArrayList( size == howMany ) from collect ( Ingredient(eval(inRecipe(recipe))) ) 
-	then
-	    insert(new Match(recipe));
-end
-*/
+import java.util.List
+import java.util.ArrayList
+import java.util.TreeSet
+import java.util.Iterator
 
 rule "RecipeCanBeMade"
     dialect "mvel" 
