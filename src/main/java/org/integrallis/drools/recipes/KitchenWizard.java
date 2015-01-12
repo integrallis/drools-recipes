@@ -4,22 +4,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.drools.KnowledgeBase;
-import org.drools.KnowledgeBaseFactory;
-import org.drools.builder.KnowledgeBuilder;
-import org.drools.builder.KnowledgeBuilderError;
-import org.drools.builder.KnowledgeBuilderErrors;
-import org.drools.builder.KnowledgeBuilderFactory;
-import org.drools.builder.ResourceType;
-import org.drools.io.ResourceFactory;
-import org.drools.logger.KnowledgeRuntimeLogger;
-import org.drools.logger.KnowledgeRuntimeLoggerFactory;
-import org.drools.runtime.StatefulKnowledgeSession;
-import org.drools.runtime.rule.QueryResults;
-import org.drools.runtime.rule.QueryResultsRow;
 import org.integrallis.drools.recipes.fixtures.Ingredients;
 import org.integrallis.drools.recipes.fixtures.Recipes;
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
 
 
 public class KitchenWizard {
@@ -28,23 +19,11 @@ public class KitchenWizard {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		KieSession knowledgeSession = null;
 		try {
-			KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-			knowledgeBuilder.add(ResourceFactory.newClassPathResource("recipes.drl"), ResourceType.DRL);
-			KnowledgeBuilderErrors errors = knowledgeBuilder.getErrors();
-			if (errors.size() > 0) {
-				for (KnowledgeBuilderError error: errors) {
-					System.err.println(error);
-				}
-				throw new IllegalArgumentException("Could not parse knowledge.");
-			}
-			
-			KnowledgeBase knowledgeBase = KnowledgeBaseFactory.newKnowledgeBase();
-			knowledgeBase.addKnowledgePackages(knowledgeBuilder.getKnowledgePackages());
-			
-			StatefulKnowledgeSession knowledgeSession = knowledgeBase.newStatefulKnowledgeSession();
-			
-			KnowledgeRuntimeLogger logger = KnowledgeRuntimeLoggerFactory.newFileLogger(knowledgeSession, "test");
+	        KieServices ks = KieServices.Factory.get();
+    	        KieContainer kContainer = ks.getKieClasspathContainer();
+    	        knowledgeSession = kContainer.newKieSession("ksession-rules");
 			
 			String input = ""; // Line read from standard in
 
@@ -112,15 +91,13 @@ public class KitchenWizard {
 				System.out.println("===> " + partial);
 			}		
 			if (partials.isEmpty()) { System.out.println("Sorry, no partial matches!"); }
-			
-			logger.close();
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
 	}	
 	
-    private static List<Recipe> recipesWeCanMake(StatefulKnowledgeSession knowledgeSession) {
-    	QueryResults results = knowledgeSession.getQueryResults( "getFullMatches" );
+    private static List<Recipe> recipesWeCanMake(KieSession knowledgeSession) {
+    		QueryResults results = knowledgeSession.getQueryResults( "getFullMatches" );
 		List<Recipe> recipesWeCanMake = new ArrayList<Recipe>();
 		for ( QueryResultsRow row : results ) {
 			Match match = (Match) row.get( "match" );
@@ -129,8 +106,8 @@ public class KitchenWizard {
 		return recipesWeCanMake;
     }
     
-    private static List<Match> getPartialMatches(StatefulKnowledgeSession knowledgeSession) {
-    	QueryResults results = knowledgeSession.getQueryResults( "getPartialMatches" );
+    private static List<Match> getPartialMatches(KieSession knowledgeSession) {
+    		QueryResults results = knowledgeSession.getQueryResults( "getPartialMatches" );
 		List<Match> partials = new ArrayList<Match>();
 		for ( QueryResultsRow row : results ) {
 			Match match = (Match) row.get( "match" );

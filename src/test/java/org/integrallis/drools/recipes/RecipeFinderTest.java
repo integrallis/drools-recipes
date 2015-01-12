@@ -25,8 +25,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.drools.runtime.rule.QueryResults;
-import org.drools.runtime.rule.QueryResultsRow;
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
 import org.integrallis.drools.junit.BaseDroolsTestCase;
 import org.integrallis.drools.recipes.fixtures.Recipes;
 import org.junit.Before;
@@ -36,7 +36,7 @@ import org.junit.Test;
 public class RecipeFinderTest extends BaseDroolsTestCase {
 
 	public RecipeFinderTest() {
-		super("recipes.drl");
+		super("ksession-rules");
 	}
 
 	@Before
